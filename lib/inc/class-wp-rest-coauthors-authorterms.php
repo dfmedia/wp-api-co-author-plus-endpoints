@@ -228,7 +228,7 @@ class WP_REST_CoAuthors_AuthorTerms extends WP_REST_Controller {
 			$terms = wp_get_object_terms( $parent_id, $this->coauthor_taxonomy );
 		} else {
 			//Get all 'author' terms
-			$terms = get_terms( $this->coauthor_taxonomy );
+			$terms = get_terms( $this->coauthor_taxonomy, array( 'hide_empty' => 0 ) );
 		}
 
 		if ( is_wp_error( $terms ) ) {
@@ -238,7 +238,7 @@ class WP_REST_CoAuthors_AuthorTerms extends WP_REST_Controller {
 
 		if ( empty( $terms ) ) {
 			//Nothing was returned, that shouldn't happen unless a requested post doesn't have any guest-authors
-			return new WP_Error( 'rest_authors_get_term', __( 'No terms returned.' ), array( 'status' => 404 ) );
+			return new WP_Error( 'rest_authors_get_term', __( 'No terms returned for "'.$this->coauthor_taxonomy.'" taxonomy.' ), array( 'status' => 404 ) );
 		}
 
 		foreach ( $terms as $term ) {
