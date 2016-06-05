@@ -1,0 +1,22 @@
+{
+    "name": "dfmedia/wp-api-co-author-plus-endpoints",
+    "description": "This plugin utilizes WP-API to query for Co-Authors Plus data and add authors to a post via the author term.",
+    "homepage": "https://github.com/jjgrainger/wp-custom-post-type-class",
+    "license": "GPLv2",
+    "authors": [
+        {
+            "name": "mjacobsen4DFM",
+            "homepage": "https://github.com/mjacobsen4DFM"
+        }
+    ],
+    "minimum-stability": "dev",
+        "require": {
+        "wordpress": ">=4.4",
+        "wpackagist-plugin/rest-api": ">=2.0-beta12",
+        "wpackagist-plugin/co-authors-plus": "3.2.1"
+
+    },
+    "autoload": {
+        "psr-0": { "CPT": "src/" }
+    }
+}
