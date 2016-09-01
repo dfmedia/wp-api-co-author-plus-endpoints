@@ -56,18 +56,7 @@ class WP_REST_CoAuthors_AuthorPosts_Endpoint extends WP_REST_CoAuthors_AuthorPos
 		$this->rest_base         = 'author-posts';
 		parent::__construct();
 	}
-
-	/**
-	 * Check if a given request has access to get a specific authors entry for a post.
-	 *
-	 * @param WP_REST_Request $request Full data about the request.
-	 *
-	 * @return boolean|WP_Error
-	 */
-	public function get_item_permissions_check( $request ) {
-		return $this->get_items_permissions_check( $request );
-	}
-
+	
 	/**
 	 * Check if a given request has access to get authors for a post.
 	 *
@@ -83,15 +72,6 @@ class WP_REST_CoAuthors_AuthorPosts_Endpoint extends WP_REST_CoAuthors_AuthorPos
 				return new WP_Error( 'rest_post_invalid_id', __( 'Invalid post id.' ), array( 'status' => 404 ) );
 			}
 
-			if ( ! $this->parent_controller->check_read_permission( $parent ) ) {
-				return new WP_Error( 'rest_forbidden', __( 'Sorry, you cannot view this post.' ), array( 'status' => rest_authorization_required_code() ) );
-			}
-
-			$post_type = get_post_type_object( $parent->post_type );
-			if ( ! current_user_can( $post_type->cap->edit_post, $parent->ID ) ) {
-				return new WP_Error( 'rest_forbidden', __( 'Sorry, you cannot view the authors for this post.' ), array( 'status' => rest_authorization_required_code() ) );
-			}
-
 			return true;
 		}
 
@@ -99,25 +79,55 @@ class WP_REST_CoAuthors_AuthorPosts_Endpoint extends WP_REST_CoAuthors_AuthorPos
 	}
 
 	/**
-	 * Check if a given request has access to create a authors entry for a post.
+	 * Check if a given request has access to create an author association for a post.
 	 *
 	 * @param WP_REST_Request $request Full data about the request.
 	 *
 	 * @return boolean
 	 */
 	public function create_item_permissions_check( $request ) {
-		return $this->get_items_permissions_check( $request );
+		if ( ! empty( $request['parent_id'] ) ) {
+			$parent = get_post( (int) $request['parent_id'] );
+
+			if ( empty( $parent ) || empty( $parent->ID ) ) {
+				return new WP_Error( 'rest_post_invalid_id', __( 'Invalid post id.' ), array( 'status' => 404 ) );
+			}
+
+			$post_type = get_post_type_object( $parent->post_type );
+			if ( ! current_user_can( $post_type->cap->edit_post, $parent->ID ) ) {
+				return new WP_Error( 'rest_forbidden', __( 'Sorry, you cannot create an author association for this post.' ), array( 'status' => rest_authorization_required_code() ) );
+			}
+
+			return true;
+		}
+
+		return new WP_Error( 'rest_forbidden', __( 'Creating an author is not supported.' ), array( 'status' => rest_authorization_required_code() ) );
 	}
 
 	/**
-	 * Check if a given request has access to update a authors entry for a post.
+	 * Check if a given request has access to update the author association for a post.
 	 *
 	 * @param WP_REST_Request $request Full data about the request.
 	 *
 	 * @return boolean
 	 */
 	public function update_item_permissions_check( $request ) {
-		return $this->get_items_permissions_check( $request );
+		if ( ! empty( $request['parent_id'] ) ) {
+			$parent = get_post( (int) $request['parent_id'] );
+
+			if ( empty( $parent ) || empty( $parent->ID ) ) {
+				return new WP_Error( 'rest_post_invalid_id', __( 'Invalid post id.' ), array( 'status' => 404 ) );
+			}
+
+			$post_type = get_post_type_object( $parent->post_type );
+			if ( ! current_user_can( $post_type->cap->edit_post, $parent->ID ) ) {
+				return new WP_Error( 'rest_forbidden', __( 'Sorry, you cannot update the author association for this post.' ), array( 'status' => rest_authorization_required_code() ) );
+			}
+
+			return true;
+		}
+
+		return new WP_Error( 'rest_forbidden', __( 'Updating an author is not supported.' ), array( 'status' => rest_authorization_required_code() ) );
 	}
 
 	/**
@@ -128,6 +138,6 @@ class WP_REST_CoAuthors_AuthorPosts_Endpoint extends WP_REST_CoAuthors_AuthorPos
 	 * @return boolean, always false: delete is not supported
 	 */
 	public function delete_item_permissions_check( $request ) {
-		return false;
+		return new WP_Error( 'rest_forbidden', __( 'Deleting an author is not supported.' ), array( 'status' => rest_authorization_required_code() ) );
 	}
 }
