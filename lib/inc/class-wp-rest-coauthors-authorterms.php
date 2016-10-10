@@ -212,6 +212,19 @@ class WP_REST_CoAuthors_AuthorTerms extends WP_REST_Controller {
 		$author_terms = array();
 		$term_ids     = null;
 
+		// If number and offset are set in the $request, use them,
+		// otherwise default to show 100
+		$number = ! empty( $request['number'] && 100 >= $request['number'] ) ? $request['number'] : 100;
+		$offset = ! empty( $request['offset'] ) ? $request['offset'] : 0;
+		$taxonomy = ! empty( $this->coauthor_taxonomy ) ? $this->coauthor_taxonomy : 'author';
+
+		$query_args = array(
+			'taxonomy' => $taxonomy,
+			'hide_empty' => false,
+			'number' => $number,
+			'offset' => $offset
+		);
+
 		if ( ! empty( $request['id_list'] ) ) {
 			//term_id list from JSON
 			$term_ids = $request['id_list'];
@@ -222,28 +235,37 @@ class WP_REST_CoAuthors_AuthorTerms extends WP_REST_Controller {
 		}
 
 		if ( ! empty( $request['parent_id'] ) ) {
+
 			$parent_id = (int) $request['parent_id'];
 
 			//Get the 'author' terms for this post
 			$terms = wp_get_object_terms( $parent_id, $this->coauthor_taxonomy );
+
 		} else {
-			//Get all 'author' terms
-			$terms = get_terms( $this->coauthor_taxonomy );
+
+			//Get the author terms
+			$terms = get_terms( $query_args );
+
 		}
 
 		if ( is_wp_error( $terms ) ) {
+
 			//Something bad happened, throw the error
 			return $terms;
+
 		}
 
 		if ( empty( $terms ) ) {
+
 			//Nothing was returned, that shouldn't happen unless a requested post doesn't have any guest-authors
 			return new WP_Error( 'rest_authors_get_term', __( 'No terms returned.' ), array( 'status' => 404 ) );
+
 		}
 
 		foreach ( $terms as $term ) {
 
 			if ( ( is_array( $term_ids ) && in_array( $term->term_id, $term_ids ) ) || is_null( $term_ids ) ) {
+
 				//If a list of id's was requested, check to see if they are in the list
 				//Otherwise, $term_ids should be null, so return all terms
 				$term_item = $this->prepare_item_for_response( $term, $request );
@@ -257,7 +279,19 @@ class WP_REST_CoAuthors_AuthorTerms extends WP_REST_Controller {
 		}
 
 		if ( ! empty( $author_terms ) ) {
-			return rest_ensure_response( $author_terms );
+
+			$total_terms = wp_count_terms( $taxonomy, $query_args );
+			$max_pages = ceil( $total_terms / (int) $number + $offset );
+
+			$response = rest_ensure_response( $author_terms );
+
+			// Set the headers with the pagination info
+			$response->header( 'X-WP-Total', (int) $total_terms );
+			$response->header( 'X-WP-TotalPages', (int) $max_pages );
+
+			// Return the $response
+			return $response;
+
 		}
 
 		return new WP_Error( 'rest_authors_get_term', __( 'Invalid authors id.' ), array( 'status' => 404 ) );
