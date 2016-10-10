@@ -94,7 +94,7 @@ class WP_REST_CoAuthors_AuthorPosts extends WP_REST_Controller {
 			'taxonomy' => $taxonomy,
 			'hide_empty' => false,
 			'number' => $number,
-			'offset' => $offset
+			'offset' => $offset,
 		);
 
 		//Populate the $author_terms(), so that we can pull out the applicable 'author-posts'
