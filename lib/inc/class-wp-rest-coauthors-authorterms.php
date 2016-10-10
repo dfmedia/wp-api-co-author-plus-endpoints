@@ -222,7 +222,7 @@ class WP_REST_CoAuthors_AuthorTerms extends WP_REST_Controller {
 			'taxonomy' => $taxonomy,
 			'hide_empty' => false,
 			'number' => $number,
-			'offset' => $offset
+			'offset' => $offset,
 		);
 
 		if ( ! empty( $request['id_list'] ) ) {
