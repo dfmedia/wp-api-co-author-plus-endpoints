@@ -84,6 +84,19 @@ class WP_REST_CoAuthors_AuthorPosts extends WP_REST_Controller {
 
 		$authors = array();
 
+		// If number and offset are set in the $request, use them,
+		// otherwise default to show 100
+		$number = ! empty( $request['number'] && 100 >= $request['number'] ) ? $request['number'] : 100;
+		$offset = ! empty( $request['offset'] ) ? $request['offset'] : 0;
+		$taxonomy = ! empty( $this->coauthor_taxonomy ) ? $this->coauthor_taxonomy : 'author';
+
+		$query_args = array(
+			'taxonomy' => $taxonomy,
+			'hide_empty' => false,
+			'number' => $number,
+			'offset' => $offset,
+		);
+
 		//Populate the $author_terms(), so that we can pull out the applicable 'author-posts'
 		if ( ! empty( $request['parent_id'] ) ) {
 			$parent_id = (int) $request['parent_id'];
@@ -93,7 +106,7 @@ class WP_REST_CoAuthors_AuthorPosts extends WP_REST_Controller {
 		} else {
 			//Get all coauthor posts via the 'author' terms
 			//Bastardized from Co-Authors-Plus/template-tags.php (used there for users; changed here to authors)
-			$author_terms = get_terms( $this->coauthor_taxonomy );
+			$author_terms = get_terms( $query_args );
 		}
 
 
@@ -132,7 +145,19 @@ class WP_REST_CoAuthors_AuthorPosts extends WP_REST_Controller {
 
 		//Collected the posts, return them
 		if ( ! empty( $author_posts ) ) {
-			return rest_ensure_response( $author_posts );
+
+			$total_terms = wp_count_terms( $taxonomy, $query_args );
+			$max_pages = ceil( $total_terms / (int) $number + $offset );
+
+			$response = rest_ensure_response( $author_posts );
+
+			// Set the headers with the pagination info
+			$response->header( 'X-WP-Total', (int) $total_terms );
+			$response->header( 'X-WP-TotalPages', (int) $max_pages );
+
+			// Return the $response
+			return $response;
+
 		}
 
 		return new WP_Error( 'rest_co_authors_get_posts', __( 'Invalid authors id.' ), array( 'status' => 404 ) );
