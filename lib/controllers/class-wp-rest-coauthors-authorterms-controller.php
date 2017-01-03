@@ -206,7 +206,7 @@ abstract class WP_REST_CoAuthors_AuthorTerms_Controller extends WP_REST_Controll
 			),
 		);
 		$taxonomy = get_taxonomy( $this->coauthor_taxonomy );
-		if ( $taxonomy->hierarchical ) {
+		if ( ! empty( $taxonomy->hierarchical ) ) {
 			$schema['properties']['parent'] = array(
 				'description' => __( 'The id for the parent of the resource.' ),
 				'type'        => 'integer',
